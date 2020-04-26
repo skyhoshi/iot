@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Device.Gpio;
 using System.Threading;
 
-public class GpioSegment : IPinSegment
+public class GpioSegment : IPinSegment, IDisposable
 {
     private GpioController _controller;
     private int[] _pins;
@@ -21,19 +21,22 @@ public class GpioSegment : IPinSegment
         }    
     }
 
-    public int this[int index] { 
-                                get => _controller.Read(_pins[index]) == PinValue.High ? 1 : 0;
-                                set { 
-                                        var pinValue = PinValue.Low;
-                                        if (value == 1)
-                                        {
-                                            pinValue = PinValue.High;
-                                        }
-                                        _controller.Write(_pins[index], pinValue);
-                                    }   
-                                }
-
     public int Length => _pins.Length;
+
+    public void Write(int pin, int value)
+    {
+        var pinValue = PinValue.Low;
+        if (value == 1)
+        {
+            pinValue = PinValue.High;
+        }
+        _controller.Write(_pins[pin], pinValue);    
+    }
+
+    public int Read(int pin)
+    {
+        return _controller.Read(_pins[pin]) == PinValue.High ? 1 : 0;
+    }
 
     protected virtual void Dispose(bool disposing)
     {

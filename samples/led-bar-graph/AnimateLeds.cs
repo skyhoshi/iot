@@ -7,15 +7,15 @@ using System.Collections.Generic;
 public class AnimateLeds
 {
     private CancellationToken _cancellation;
-    private IPinSegment _pins;
+    private IPinSegment _pinSegment;
     public int LitTimeDefault = 200;
     public int DimTimeDefault = 50;
     public int LitTime = 200;
     public int DimTime = 50;
 
-    public AnimateLeds(IPinSegment pins, CancellationToken token)
+    public AnimateLeds(IPinSegment pinSegment, CancellationToken token)
     {        
-        _pins = pins;
+        _pinSegment = pinSegment;
         _cancellation = token;
     }
 
@@ -29,14 +29,14 @@ public class AnimateLeds
         // light time
         foreach (var pin in pins)
         {
-            _pins[pin] = 1;
+            _pinSegment.Write(pin, 1);
         }
         Thread.Sleep(LitTime);
 
         // dim time
         foreach (var pin in pins)
         {
-            _pins[pin] = 0;
+            _pinSegment.Write(pin, 0);
         }
         Thread.Sleep(DimTime);
     }
@@ -59,64 +59,70 @@ public class AnimateLeds
     public void FrontToBack(bool skipLast = false)
     {
         Console.WriteLine(nameof(FrontToBack));
-        var iterations = skipLast ? _pins.Length : _pins.Length - 2;
-        Sequence(_pins.ToArray().AsSpan(0,iterations).ToArray());
+        var iterations = skipLast ? _pinSegment.Length : _pinSegment.Length - 2;
+        Sequence(Enumerable.Range(0,iterations));
+        //Sequence(_pinSegment.ToArray().AsSpan(0,iterations).ToArray());
     }
     public void BacktoFront()
     {
         Console.WriteLine(nameof(BacktoFront));
-        Sequence(_pins.Reverse());
+        Sequence(Enumerable.Range(0,_pinSegment.Length).Reverse());
+        //Sequence(_pinSegment.Reverse());
     }
 
     public void MidToEnd()
     {
         Console.WriteLine(nameof(MidToEnd));
-        var half = _pins.Length / 2;
+        var half = _pinSegment.Length / 2;
 
-        if (_pins.Length % 2 == 1)
+        if (_pinSegment.Length % 2 == 1)
         {
-            CycleLeds(_pins[half]);
+            CycleLeds(half);
+            //CycleLeds(_pinSegment[half]);
         }
 
         for (var i = 1; i < half+1; i ++)
         {
-            var ledA= half - i;
-            var ledB = half - 1 + i;
+            var pinA= half - i;
+            var pinB = half - 1 + i;
 
-            CycleLeds(_pins[ledA],_pins[ledB]);
+            CycleLeds(pinA,pinB);
+            //CycleLeds(_pinSegment[ledA],_pinSegment[ledB]);
         }
     }
 
     public void EndToMid()
     {
         Console.WriteLine(nameof(EndToMid));
-        var half = _pins.Length / 2;
+        var half = _pinSegment.Length / 2;
 
         for (var i = 0; i < half ; i++)
         {
             var ledA = i;
-            var ledB = _pins.Length - 1 - i;
+            var ledB = _pinSegment.Length - 1 - i;
 
-            CycleLeds(_pins[ledA], _pins[ledB]);
+            CycleLeds(ledA, ledB);
+            //CycleLeds(_pinSegment[ledA], _pinSegment[ledB]);
         }
 
-        if (_pins.Length % 2 == 1)
+        if (_pinSegment.Length % 2 == 1)
         {
-            CycleLeds(_pins[half]);
+            CycleLeds(half);
+            //CycleLeds(_pinSegment[half]);
         }
     }
 
     public void LightAll()
     {
         Console.WriteLine(nameof(LightAll));
-        foreach(var pin in _pins)
+        foreach(var pin in Enumerable.Range(0,_pinSegment.Length))
         {
             if (_cancellation.IsCancellationRequested)
             {
                 return;
             }
 
-            _pins[pin] = 1;
+            _pinSegment.Write(pin, 1);
         }
         Thread.Sleep(LitTime);
     }
@@ -126,20 +132,20 @@ public class AnimateLeds
         Console.WriteLine(nameof(DimAllAtRandom));
         var random = new Random();
 
-        var ledList = Enumerable.Range(0,_pins.Length).ToList();
+        var pinList = Enumerable.Range(0,_pinSegment.Length).ToList();
 
-        while (ledList.Count > 0)
+        while (pinList.Count > 0)
         {
             if (_cancellation.IsCancellationRequested)
             {
                 return;
             }
 
-            var led = random.Next(_pins[_pins.Length-1]);
+            var pin = random.Next(_pinSegment.Length-1);
 
-            if (ledList.Remove(led))
+            if (pinList.Remove(pin))
             {
-                _pins[led] = 0;
+                _pinSegment.Write(pin, 0);
                 Thread.Sleep(DimTime);
             }
         }

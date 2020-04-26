@@ -4,27 +4,19 @@ using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
 
-public class AnimateLeds : IDisposable
+public class AnimateLeds
 {
-    private GpioController _controller;
     private CancellationToken _cancellation;
-    private int[] _pins;
-
+    private IPinSegment _pins;
     public int LitTimeDefault = 200;
     public int DimTimeDefault = 50;
     public int LitTime = 200;
     public int DimTime = 50;
 
-    public AnimateLeds(int[] pins, CancellationToken token)
-    {
-        _controller = new GpioController();
+    public AnimateLeds(IPinSegment pins, CancellationToken token)
+    {        
         _pins = pins;
         _cancellation = token;
-        
-        foreach (var pin in _pins)
-        {
-            _controller.OpenPin(pin, PinMode.Output);
-        }    
     }
 
     private void CycleLeds(params int[] pins)
@@ -37,14 +29,14 @@ public class AnimateLeds : IDisposable
         // light time
         foreach (var pin in pins)
         {
-            _controller.Write(pin, PinValue.High);
+            _pins[pin] = 1;
         }
         Thread.Sleep(LitTime);
 
         // dim time
         foreach (var pin in pins)
         {
-            _controller.Write(pin, PinValue.Low);
+            _pins[pin] = 0;
         }
         Thread.Sleep(DimTime);
     }
@@ -68,12 +60,12 @@ public class AnimateLeds : IDisposable
     {
         Console.WriteLine(nameof(FrontToBack));
         var iterations = skipLast ? _pins.Length : _pins.Length - 2;
-        Sequence(_pins.AsSpan(0,iterations).ToArray());
+        Sequence(_pins.ToArray().AsSpan(0,iterations).ToArray());
     }
     public void BacktoFront()
     {
         Console.WriteLine(nameof(BacktoFront));
-        Sequence(_pins.Reverse().ToArray());
+        Sequence(_pins.Reverse());
     }
 
     public void MidToEnd()
@@ -124,7 +116,7 @@ public class AnimateLeds : IDisposable
                 return;
             }
 
-            _controller.Write(pin, PinValue.High);
+            _pins[pin] = 1;
         }
         Thread.Sleep(LitTime);
     }
@@ -147,15 +139,10 @@ public class AnimateLeds : IDisposable
 
             if (ledList.Remove(led))
             {
-                _controller.Write(_pins[led],PinValue.Low);
+                _pins[led] = 0;
                 Thread.Sleep(DimTime);
             }
         }
 
-    }
-
-    public void Dispose()
-    {
-        _controller.Dispose();
     }
 }

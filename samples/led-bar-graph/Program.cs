@@ -10,8 +10,9 @@ namespace led_bar_graph
             Console.WriteLine("Hello World!");
 
             var pins = new int[] {4,5,6,12,13,16,17,18,19,20};
+            using var gpioArray = new GpioSegment(pins);
             var cancellationSource = new CancellationTokenSource();
-            using var leds = new AnimateLeds(pins, cancellationSource.Token);
+            var leds = new AnimateLeds(gpioArray, cancellationSource.Token);
             Console.CancelKeyPress += (s, e) => 
             { 
                 e.Cancel = true;

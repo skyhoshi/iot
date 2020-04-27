@@ -23,7 +23,7 @@ public class AnimateLeds
         _pinsReverse = _pins.Reverse().ToArray();
     }
 
-    private void CycleLeds(params int[] pins)
+    private void CycleLeds(IEnumerable<int> pins, int litTime, int dimTime)
     {
         if (_cancellation.IsCancellationRequested)
         {
@@ -35,15 +35,21 @@ public class AnimateLeds
         {
             _pinSegment.Write(pin, 1);
         }
-        Thread.Sleep(LitTime);
+        Thread.Sleep(litTime);
 
         // dim time
         foreach (var pin in pins)
         {
             _pinSegment.Write(pin, 0);
         }
-        Thread.Sleep(DimTime);
+        Thread.Sleep(dimTime);
     }
+
+    private void CycleLeds(params int[] pins)
+    {
+        CycleLeds(pins,LitTime,DimTime);
+    }
+
 
     public void ResetTime()
     {
@@ -146,6 +152,57 @@ public class AnimateLeds
                 Thread.Sleep(DimTime);
             }
         }
+    }
+    public void FlashRandomLeds()
+    {
+        Console.WriteLine(nameof(FlashRandomLeds));
+        if (_cancellation.IsCancellationRequested)
+        {
+            return;
+        }
 
+        var pinsArray = SelectRandomLeds(_pins.Length/3, true).ToArray();
+        for (var i  = 0; i < 3; i++)
+        {
+            CycleLeds(pinsArray, 100, 100);
+        }   
+    }
+
+    public IEnumerable<int> SelectRandomLeds(int count, bool preferPairs)
+    {
+        var random = new Random();
+        var pinList = _pins.ToList();
+        var lastWinner = -1;
+
+        while (pinList.Count > _pins.Length - count)
+        {
+            if (_cancellation.IsCancellationRequested)
+            {
+                yield break;
+            }
+
+            if (preferPairs &&  lastWinner > -1)
+            {
+                var winner = lastWinner;
+                if (pinList.Remove(lastWinner + 1))
+                {
+                    lastWinner  = -1;
+                    yield return winner + 1;
+                }
+                else if (pinList.Remove(lastWinner -1))
+                {
+                    lastWinner = -1;
+                    yield return winner -1;
+                }
+            }
+           
+            var pin = random.Next(_pinSegment.Length);
+
+            if (pinList.Remove(pin))
+            {
+                lastWinner = pin;
+                yield return pin;
+            }
+        }
     }
 }

@@ -133,23 +133,15 @@ public class AnimateLeds
     public void DimAllAtRandom()
     {
         Console.WriteLine(nameof(DimAllAtRandom));
-        var random = new Random();
 
-        var pinList = _pins.ToList();
-
-        while (pinList.Count > 0)
+        foreach (var pin in SelectRandomPins(_pins.Length))
         {
+            _pinSegment.Write(pin, 0);
+            Thread.Sleep(DimTime);
+            
             if (_cancellation.IsCancellationRequested)
             {
                 return;
-            }
-
-            var pin = random.Next(_pinSegment.Length);
-
-            if (pinList.Remove(pin))
-            {
-                _pinSegment.Write(pin, 0);
-                Thread.Sleep(DimTime);
             }
         }
     }
@@ -161,14 +153,14 @@ public class AnimateLeds
             return;
         }
 
-        var pinsArray = SelectRandomLeds(_pins.Length/3, true).ToArray();
+        var pinsArray = SelectRandomPins(_pins.Length/3, true).ToArray();
         for (var i  = 0; i < 3; i++)
         {
             CycleLeds(pinsArray, 100, 100);
         }   
     }
 
-    public IEnumerable<int> SelectRandomLeds(int count, bool preferPairs)
+    public IEnumerable<int> SelectRandomPins(int count, bool preferPairs = false)
     {
         var random = new Random();
         var pinList = _pins.ToList();

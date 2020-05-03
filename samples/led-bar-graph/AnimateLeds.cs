@@ -154,7 +154,7 @@ public class AnimateLeds
         }
 
         var pinsArray = SelectRandomPins(_pins.Length/3, true).ToArray();
-        for (var i  = 0; i < 3; i++)
+        for (var i  = 0; i < 4; i++)
         {
             CycleLeds(pinsArray, 100, 100);
         }   

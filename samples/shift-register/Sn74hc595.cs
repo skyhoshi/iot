@@ -15,9 +15,9 @@ namespace Iot.Device.ShiftRegister
         private int _SRCLK;
         private int _RCLK;
 
-        private int _length;
+        private int _count;
 
-        public Sn74hc595(PinMapping pinMapping, GpioController controller = null,  bool shouldDispose = true, int additionalRegisters = 0)
+        public Sn74hc595(PinMapping pinMapping, GpioController controller = null,  bool shouldDispose = true, int count = 1)
         {
             if (controller == null)
             {
@@ -33,11 +33,12 @@ namespace Iot.Device.ShiftRegister
             _SER = _mapping.SER;
             _SRCLK = _mapping.SRCLK;
             _RCLK = _mapping.RCLK;
-            _length = additionalRegisters + 1;
+            _count = count;
             Setup();
         }
 
-        public int Length => _length;
+        public int Count => _count;
+        public int Bits => _count * 8;
 
         public void Dispose()
         {
@@ -54,34 +55,22 @@ namespace Iot.Device.ShiftRegister
             {
                 _controller.WriteValuesToPin(_mapping.SRCLR,0,1);
             }
-        }
-
-        public void Clear()
-        {
-            for (int i = 0; i < _length; i++)
+            else
             {
-                ShiftAndLatch(0);
+                throw new ArgumentNullException($"{nameof(ClearStorage)}: {nameof(_mapping.SRCLR)} not mapped to non-zero pin value");
             }
         }
 
-        public void OutputDisable()
+        public void ShiftClear()
         {
-            if (_mapping.OE > 0)
+            for (int i = 0; i < Bits; i++)
             {
-                _controller.Write(_mapping.OE, 1);
+                Shift(0);
             }
+            Latch();
         }
 
-        public void OutputEnable()
-        {
-            if (_mapping.OE > 0)
-            {
-                _controller.Write(_mapping.OE, 0);
-            }
-        }
-
-
-        public void Shift(PinValue value)
+        public void Shift(int value)
         {
             _controller.Write(_SER,value);
             _controller.Write(_SRCLK, 1);
@@ -93,16 +82,37 @@ namespace Iot.Device.ShiftRegister
             _controller.WriteValuesToPin(_RCLK,1,0);
         }
 
-        public void ShiftAndLatch(byte data)
+        public void ShiftByte(byte value)
         {
-            Console.WriteLine(nameof(ShiftAndLatch));
             for (int i = 0; i < 8; i++)
             {
-                var value =  128 >> i & data;
-                Console.WriteLine($"Index: {i}; Value: {value}");
-                Shift((int)value);
+                var data =  (128 >> i) & value;
+                Shift(data);
             }
-            Latch();
+        }
+
+        public void OutputDisable()
+        {
+            if (_mapping.OE > 0)
+            {
+                _controller.Write(_mapping.OE, 1);
+            }
+            else
+            {
+                throw new ArgumentNullException($"{nameof(OutputDisable)}: {nameof(_mapping.OE)} not mapped to non-zero pin value");
+            }
+        }
+
+        public void OutputEnable()
+        {
+            if (_mapping.OE > 0)
+            {
+                _controller.Write(_mapping.OE, 0);
+            }
+            else
+            {
+                throw new ArgumentNullException($"{nameof(OutputEnable)}: {nameof(_mapping.OE)} not mapped to non-zero pin value");
+            }
         }
 
         private void Setup()

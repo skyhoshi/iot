@@ -12,87 +12,115 @@ namespace shift_register
             Console.WriteLine("Hello World!");
 
             var controller = new GpioController();
-            var sr = new Sn74hc595(Sn74hc595.PinMapping.Standard, controller,true,1);
+            var sr = new Sn74hc595(Sn74hc595.PinMapping.Standard, controller,true,2);
 
             var cancellationSource = new CancellationTokenSource();
             Console.CancelKeyPress += (s, e) =>
             {
                 e.Cancel = true;
                 cancellationSource.Cancel();
-                sr.Clear();
             };
 
+            Console.WriteLine("****Information:");
+            Console.WriteLine($"Bit count: {sr.Bits}");
 
+            sr.ShiftClear();
 
-            sr.Clear();
-
-            // write values and latch
-            for (int i = 0; i < sr.Length; i++)
-            {
-                sr.Shift(i);
-            }
+            Console.WriteLine("Light up three of first four LEDs");
+            sr.Shift(1);
+            sr.Shift(1);
+            sr.Shift(0);
+            sr.Shift(1);
             sr.Latch();
-            Console.WriteLine("Write values");
             Console.ReadLine();
-            sr.Clear();
 
-            Console.WriteLine("Write more values");
-            sr.ShiftAndLatch(23);
-            Console.ReadLine();
-            sr.Clear();
+            sr.ShiftClear();
+            
+            Console.WriteLine($"Light up all LEDs, with {nameof(sr.Shift)}");
 
-            Console.WriteLine("Write 255 to each register");
-            for (int i = 0; i < sr.Length; i++)
+            for (int i = 0; i < sr.Bits; i++)
             {
-                sr.ShiftAndLatch(255);
+                sr.Shift(1);
             }
-            Console.ReadLine();
-            sr.Clear();
-
-
-            sr.OutputDisable();
-            Console.WriteLine("disable");
+            
+            sr.Latch();
             Console.ReadLine();
 
-            Console.WriteLine("enable");
-            sr.OutputEnable();
+            sr.ShiftClear();
+
+            Console.WriteLine($"Dim up all LEDs, with {nameof(sr.Shift)}");
+
+            for (int i = 0; i < sr.Bits; i++)
+            {
+                sr.Shift(0);
+            }
+            
+            sr.Latch();
             Console.ReadLine();
+
 
             if (cancellationSource.IsCancellationRequested)
             {
                 return;
             }
 
-            for (int i = 0; i < 8; i++)
+            Console.WriteLine($"Write a set of values with {nameof(sr.ShiftByte)}");
+            var values = new byte[]{23, 56, 127, 128, 250};
+            foreach (var value in values)
             {
-                sr.Shift(1);
-                sr.Shift(0);
+                Console.WriteLine($"Value: {value}");
+                sr.ShiftByte(value);
                 sr.Latch();
-                Thread.Sleep(500);
-            }
-            
-            Thread.Sleep(1000);
-
-            for (int i = 0; i < 255; i++)
-            {
-                Console.WriteLine($"Index: {i}");
-                Thread.Sleep(500);
-                sr.ShiftAndLatch((byte)i);
-                Thread.Sleep(500);
+                Console.ReadLine();
+                sr.ShiftClear();
 
                 if (cancellationSource.IsCancellationRequested)
                 {
-                    Console.WriteLine("Cancelled Requested");
-                    sr.Clear();
-                    Console.WriteLine("Cancel acknowleged");
-                    break;
+                    return;
                 }
             }
+
+            Console.WriteLine($"Write 255 to each register with {nameof(sr.ShiftByte)}");
+            for (int i = 0; i < sr.Count; i++)
+            {
+                sr.ShiftByte(255);
+            }
+            sr.Latch();
+            Console.ReadLine();
+
+
+            Console.WriteLine("Output disable");
+            sr.OutputDisable();
+            Console.ReadLine();
+
+            Console.WriteLine("Output enable");
+            sr.OutputEnable();
+            Console.ReadLine();
+
+            Console.WriteLine($"Clear storage with {nameof(sr.ClearStorage)} and then latch");
+            sr.ClearStorage();
+            sr.Latch();
+            Console.ReadLine();
+
+            Console.WriteLine($"Write 23 then 56 with {nameof(sr.ShiftByte)}");
+            sr.ShiftByte(23);
+            sr.ShiftByte(56);
+            sr.Latch();
+            Console.ReadLine();
+
+            sr.ShiftClear();
+
+            if (cancellationSource.IsCancellationRequested)
+            {
+                return;
+            }
             
-            sr.Clear();
+            sr.ShiftClear();
             Console.WriteLine("done");
             
 /*
+
+            Using the shift register w/o a binding
 
             while (!cancellationSource.IsCancellationRequested)
             {

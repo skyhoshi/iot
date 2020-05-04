@@ -116,6 +116,14 @@ namespace shift_register
             }
             
             sr.ShiftClear();
+
+            var totalCount = Math.Pow(2,sr.Bits);
+            for (var i = 0; i < totalCount; i++)
+            {
+                sr.ShiftByte((byte)i);
+                Thread.Sleep(100);
+            }
+
             Console.WriteLine("done");
             
 /*

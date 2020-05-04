@@ -23,7 +23,6 @@ namespace shift_register
 
             Console.WriteLine("****Information:");
             Console.WriteLine($"Bit count: {sr.Bits}");
-
             sr.ShiftClear();
 
             Console.WriteLine("Light up three of first four LEDs");
@@ -107,24 +106,47 @@ namespace shift_register
             sr.ShiftByte(56);
             sr.Latch();
             Console.ReadLine();
-
             sr.ShiftClear();
-
-            if (cancellationSource.IsCancellationRequested)
-            {
-                return;
-            }
-            
-            sr.ShiftClear();
-
-            var totalCount = Math.Pow(2,sr.Bits);
-            for (var i = 0; i < totalCount; i++)
+         
+            Console.WriteLine($"Write 0 through 255");
+            for (var i = 0; i < 255; i++)
             {
                 sr.ShiftByte((byte)i);
-                Thread.Sleep(100);
+                sr.Latch();
+                Thread.Sleep(50);
+                sr.ClearStorage();
+
+                if (cancellationSource.IsCancellationRequested)
+                {
+                    return;
+                }
+            }
+
+            sr.ShiftClear();
+
+            if (sr.Count > 1)
+            {
+                Console.WriteLine($"Write 256 through 1024");
+                for (var i = 256; i < 1024; i++)
+                {
+                    var downShiftedValue = i >> 8;
+                    sr.ShiftByte((byte)downShiftedValue);
+                    sr.ShiftByte((byte)i);
+                    sr.Latch();
+                    Thread.Sleep(50);
+                    sr.ClearStorage();
+
+                    if (cancellationSource.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                }
             }
 
             Console.WriteLine("done");
+            Console.ReadLine();
+
+            sr.ShiftClear();
             
 /*
 

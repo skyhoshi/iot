@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Device.Gpio" Version="1.0.0" />
+    <ProjectReference Include="$(IotBindingsLibraryPath)Iot.Device.Bindings.csproj" />
   </ItemGroup>
 
 </Project>

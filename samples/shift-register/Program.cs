@@ -75,6 +75,7 @@ namespace shift_register
 
                 if (cancellationSource.IsCancellationRequested)
                 {
+                    sr.ShiftClear();
                     return;
                 }
             }
@@ -96,19 +97,19 @@ namespace shift_register
             sr.OutputEnable();
             Console.ReadLine();
 
-            Console.WriteLine($"Clear storage with {nameof(sr.ClearStorage)} and then latch");
-            sr.ClearStorage();
-            sr.Latch();
-            Console.ReadLine();
-
             Console.WriteLine($"Write 23 then 56 with {nameof(sr.ShiftByte)}");
             sr.ShiftByte(23);
             sr.ShiftByte(56);
             sr.Latch();
             Console.ReadLine();
             sr.ShiftClear();
+
+            Console.WriteLine($"Clear storage with {nameof(sr.ClearStorage)} and then latch");
+            sr.ClearStorage();
+            sr.Latch();
+            Console.ReadLine();
          
-            Console.WriteLine($"Write 0 through 255");
+            Console.WriteLine($"Write 0 through 255-1");
             for (var i = 0; i < 255; i++)
             {
                 sr.ShiftByte((byte)i);
@@ -118,6 +119,7 @@ namespace shift_register
 
                 if (cancellationSource.IsCancellationRequested)
                 {
+                    sr.ShiftClear();
                     return;
                 }
             }
@@ -126,8 +128,8 @@ namespace shift_register
 
             if (sr.Count > 1)
             {
-                Console.WriteLine($"Write 256 through 1024");
-                for (var i = 256; i < 1024; i++)
+                Console.WriteLine($"Write 256 through 4096-1");
+                for (var i = 256; i < 4096; i++)
                 {
                     var downShiftedValue = i >> 8;
                     sr.ShiftByte((byte)downShiftedValue);
@@ -138,6 +140,7 @@ namespace shift_register
 
                     if (cancellationSource.IsCancellationRequested)
                     {
+                        sr.ShiftClear();
                         return;
                     }
                 }
@@ -147,7 +150,7 @@ namespace shift_register
             Console.ReadLine();
 
             sr.ShiftClear();
-            
+
 /*
 
             Using the shift register w/o a binding

@@ -114,7 +114,7 @@ namespace shift_register
             {
                 sr.ShiftByte((byte)i);
                 sr.Latch();
-                Thread.Sleep(50);
+                Thread.Sleep(100);
                 sr.ClearStorage();
 
                 if (cancellationSource.IsCancellationRequested)
@@ -128,14 +128,14 @@ namespace shift_register
 
             if (sr.Count > 1)
             {
-                Console.WriteLine($"Write 256 through 4096-1");
+                Console.WriteLine($"Write 256 through 4096-1; pick up the pace");
                 for (var i = 256; i < 4096; i++)
                 {
                     var downShiftedValue = i >> 8;
                     sr.ShiftByte((byte)downShiftedValue);
                     sr.ShiftByte((byte)i);
                     sr.Latch();
-                    Thread.Sleep(50);
+                    Thread.Sleep(10);
                     sr.ClearStorage();
 
                     if (cancellationSource.IsCancellationRequested)
